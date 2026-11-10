@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/logo.png">
+    <title>SeleÃ§Ã£o de Motivo - Controle de Catraca</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="system-logo"></div>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Controle de Catraca</h1>
+            <h2 id="student-name">Nome do Aluno</h2>
+            <h3 id="student-class">Turma: -</h3>
+        </div>
+        
+        <div class="card">
+            <h3 style="text-align: center; color: var(--catraca-light-gray, #F5F5F5); margin-bottom: 20px;">Selecione o Motivo:</h3>
+            <div class="reasons-grid">
+                <a href="#" class="reason-btn" data-reason="entrada">
+                    <span class="reason-icon"><i class="fas fa-door-open"></i></span>
+                    <span class="reason-text">Entrada</span>
+                </a>
+                <a href="tipo-saida.html" class="reason-btn" data-reason="saida">
+                    <span class="reason-icon"><i class="fas fa-sign-out-alt"></i></span>
+                    <span class="reason-text">SaÃ­da</span>
+                </a>
+                <a href="#" class="reason-btn" data-reason="atraso">
+                    <span class="reason-icon"><i class="fas fa-clock"></i></span>
+                    <span class="reason-text">Atraso</span>
+                </a>
+                <a href="cracha.html" class="reason-btn" data-reason="cracha">
+                    <span class="reason-icon"><i class="fas fa-id-card"></i></span>
+                    <span class="reason-text">CrachÃ¡</span>
+                </a>
+                <a href="#" class="reason-btn" data-reason="uniforme">
+                    <span class="reason-icon"><i class="fas fa-tshirt"></i></span>
+                    <span class="reason-text">Sem Uniforme</span>
+                </a>
+            </div>
+            
+            <div class="button-group">
+                <a href="login.html" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i> Voltar</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js?v=2"></script>
+    <script>
+        // Load student data
+        document.addEventListener('DOMContentLoaded', function() {
+            const aluno = storage.get('aluno');
+            const cpf = storage.get('cpf');
+            
+            if (!aluno || !cpf) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('student-name').textContent = aluno.nome;
+            document.getElementById('student-class').textContent = `Turma: ${aluno.turma}`;
+        });
+
+        // Handle reason buttons
+        document.querySelectorAll('.reason-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                const motivo = this.dataset.reason;
+                
+                if (motivo === 'entrada' || motivo === 'atraso') {
+                    e.preventDefault();
+                    const { hora } = obterDataHora();
+                    const aluno = storage.get('aluno');
+                    const cpf = storage.get('cpf');
+                    
+                    if (motivo === 'entrada') {
+                        try {
+                            const ticket = await gerarTicketBackend(cpf, 'entrada', 'Atraso - Entrada', hora);
+                            if (!ticket.qr) {
+                                alert('Entrada dentro do horÃ¡rio permitido (07:00 Ã s 07:40). NÃ£o Ã© necessÃ¡rio ticket.');
+                                return;
+                            }
+                            storage.set('ticketData', ticket);
+                            window.location.href = 'ticket.html';
+                        } catch (err) {
+                            alert(err.message || 'Erro ao gerar ticket de entrada');
+                        }
+                    } else if (motivo === 'atraso') {
+                        try {
+                            const ticket = await gerarTicketBackend(cpf, 'entrada', 'Atraso', hora);
+                            if (ticket.qr) {
+                                storage.set('ticketData', ticket);
+                                window.location.href = 'ticket.html';
+                            }
+                        } catch (err) {
+                            alert(err.message || 'Erro ao gerar ticket de atraso');
+                        }
+                    }
+                } else if (motivo === 'uniforme') {
+                    e.preventDefault();
+                    const cpf = storage.get('cpf');
+                    const aluno = storage.get('aluno');
+                    
+                    try {
+                        const res = await registrarOcorrenciaBackend(cpf, 'uniforme');
+                        if (!res.permitido) {
+                            alert(res.mensagem || 'Limite de 1x no mÃªs atingido. Encaminhado ao apoio.');
+                            return;
+                        }
+
+                        const { hora } = obterDataHora();
+                        const ticket = await gerarTicketBackend(
+                            cpf,
+                            'uniforme',
+                            'Sem Uniforme / Vestimenta PadrÃ£o',
+                            hora
+                        );
+                        if (ticket.qr) {
+                            storage.set('ticketData', ticket);
+                            window.location.href = 'ticket.html';
+                        }
+                    } catch (err) {
+                        alert(err.message || 'Erro ao gerar ticket de uniforme');
+                    }
+                }
+                // 'saida' and 'cracha' jÃ¡ redirecionam via href
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+

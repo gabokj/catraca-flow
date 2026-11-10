@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/logo.png">
+    <title>Tipo de SaÃ­da - Controle de Catraca</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="system-logo"></div>
+    <div class="container">
+        <div class="header">
+            <h1>Tipo de SaÃ­da</h1>
+            <h2 id="student-name">Nome do Aluno</h2>
+            <h3 id="student-class">Turma: -</h3>
+        </div>
+        
+        <div class="card">
+            <h3 style="text-align: center; color: var(--catraca-light-gray, #F5F5F5); margin-bottom: 20px;">Selecione o tipo de saÃ­da:</h3>
+            <div class="reasons-grid">
+                <a href="#" class="reason-btn saida-type-btn" data-saida-type="apoio">
+                    <span class="reason-icon"><i class="fas fa-building"></i></span>
+                    <span class="reason-text">Apoio AQVs</span>
+                </a>
+                <a href="#" class="reason-btn saida-type-btn" data-saida-type="esporte">
+                    <span class="reason-icon"><i class="fas fa-running"></i></span>
+                    <span class="reason-text">Esporte</span>
+                </a>
+                <a href="#" class="reason-btn saida-type-btn" data-saida-type="biblioteca">
+                    <span class="reason-icon"><i class="fas fa-book-reader"></i></span>
+                    <span class="reason-text">Biblioteca</span>
+                </a>
+                <a href="#" class="reason-btn saida-type-btn" data-saida-type="tutor">
+                    <span class="reason-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                    <span class="reason-text">Tutor TCC</span>
+                </a>
+            </div>
+            
+            <div class="button-group">
+                <a href="motivo.html" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i> Voltar</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js?v=2"></script>
+    <script>
+        // Load student data
+        document.addEventListener('DOMContentLoaded', function() {
+            const aluno = storage.get('aluno');
+            
+            if (!aluno) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('student-name').textContent = aluno.nome;
+            document.getElementById('student-class').textContent = `Turma: ${aluno.turma}`;
+        });
+
+        // Handle saida type buttons
+        document.querySelectorAll('.saida-type-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const saidaTipo = this.dataset.saidaType;
+                const { hora } = obterDataHora();
+                const aluno = storage.get('aluno');
+                const cpf = storage.get('cpf');
+                let tipoBackend = null;
+                let motivoSaida = '';
+                
+                switch(saidaTipo) {
+                    case 'apoio':
+                        tipoBackend = 'saida_apoio';
+                        motivoSaida = 'SaÃ­da - Apoio AQVs';
+                        break;
+                    case 'esporte':
+                        tipoBackend = 'saida_esporte';
+                        motivoSaida = 'SaÃ­da - Esporte';
+                        break;
+                    case 'biblioteca':
+                        tipoBackend = 'saida_biblioteca';
+                        motivoSaida = 'SaÃ­da - Biblioteca';
+                        break;
+                    case 'tutor':
+                        tipoBackend = 'saida_tutor';
+                        motivoSaida = 'SaÃ­da - Tutor TCC';
+                        break;
+                }
+                
+                if (!tipoBackend || !aluno || !cpf) {
+                    alert('Dados do aluno nÃ£o encontrados. Redirecionando para login.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                try {
+                    const ticket = await gerarTicketBackend(cpf, tipoBackend, motivoSaida, hora);
+                    if (ticket.qr) {
+                        storage.set('ticketData', ticket);
+                        window.location.href = 'ticket.html';
+                    }
+                } catch (err) {
+                    alert(err.message || 'Erro ao gerar ticket de saÃ­da');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+

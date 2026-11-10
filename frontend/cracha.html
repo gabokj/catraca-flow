@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/logo.png">
+    <title>InformaÃ§Ãµes do CrachÃ¡ - Controle de Catraca</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="system-logo"></div>
+    <div class="container">
+        <div class="header">
+            <h1>InformaÃ§Ãµes do CrachÃ¡</h1>
+            <h2 id="student-name">Nome do Aluno</h2>
+            <h3 id="student-class">Turma: -</h3>
+        </div>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>Motivo:</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="cracha-reason" value="esquecimento" checked>
+                        <span>Esquecimento</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="cracha-reason" value="perda">
+                        <span>Perda</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="generate-cracha-ticket" class="btn btn-primary"><i class="fas fa-ticket-alt me-2"></i> Gerar Ticket</button>
+                <a href="motivo.html" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i> Voltar</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js?v=2"></script>
+    <script>
+        // Load student data
+        document.addEventListener('DOMContentLoaded', function() {
+            const aluno = storage.get('aluno');
+            const cpf = storage.get('cpf');
+            
+            if (!aluno || !cpf) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('student-name').textContent = aluno.nome;
+            document.getElementById('student-class').textContent = `Turma: ${aluno.turma}`;
+        });
+
+        // Generate cracha ticket
+        document.getElementById('generate-cracha-ticket').addEventListener('click', async function() {
+            const motivoCrach = document.querySelector('input[name="cracha-reason"]:checked').value;
+            const { hora } = obterDataHora();
+            const aluno = storage.get('aluno');
+            const cpf = storage.get('cpf');
+            
+            if (!aluno || !cpf) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let motivoTicket = '';
+            let tipoOcorrencia = '';
+            let tipoBackend = '';
+            
+            if (motivoCrach === 'esquecimento') {
+                motivoTicket = 'Esquecimento de CrachÃ¡';
+                tipoOcorrencia = 'esquecimento';
+                tipoBackend = 'cracha_esquecimento';
+            } else if (motivoCrach === 'perda') {
+                motivoTicket = 'Perda de CrachÃ¡';
+                tipoOcorrencia = 'perda';
+                tipoBackend = 'cracha_perda';
+            }
+
+            try {
+                const res = await registrarOcorrenciaBackend(cpf, tipoOcorrencia);
+                if (!res.permitido) {
+                    if (motivoCrach === 'esquecimento') {
+                        alert(res.mensagem || 'Limite de 2x no mÃªs atingido. Entra, mas deve dirigir-se ao apoio.');
+                    } else {
+                        alert(res.mensagem || 'Limite de 3x na semana atingido. Entra, mas deve dirigir-se ao apoio.');
+                    }
+                    return;
+                }
+
+                const ticket = await gerarTicketBackend(cpf, tipoBackend, motivoTicket, hora);
+                if (ticket.qr) {
+                    storage.set('ticketData', ticket);
+                    window.location.href = 'ticket.html';
+                }
+            } catch (err) {
+                alert(err.message || 'Erro ao gerar ticket de crachÃ¡');
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+

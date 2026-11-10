@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/logo.png">
+    <title>Ticket Gerado - Controle de Catraca</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="system-logo"></div>
+    <div class="container">
+        <div class="header">
+            <h1>Ticket Gerado</h1>
+        </div>
+        
+        <div class="ticket-container">
+            <div class="ticket">
+                <div class="ticket-header">
+                    <img src="img/logo.png" alt="Logo" class="ticket-logo" onerror="this.style.display='none'">
+                    <i class="fas fa-ticket-alt" style="font-size: 2rem; color: var(--catraca-red, #E30613); margin-bottom: 6px;"></i>
+                    <p>Sistema de Controle de Catraca</p>
+                </div>
+                
+                <div class="ticket-body">
+                    <div class="ticket-info">
+                        <div class="info-row">
+                            <span class="label">Turma:</span>
+                            <span id="ticket-class" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Nome:</span>
+                            <span id="ticket-name" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Data:</span>
+                            <span id="ticket-date" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Hora:</span>
+                            <span id="ticket-time" class="value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Motivo:</span>
+                            <span id="ticket-reason" class="value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="qr-container">
+                        <div id="qrcode"></div>
+                        <div class="qr-code-label">
+                            <span>CÃƒÂ³digo QR:</span>
+                            <span id="qr-code-number" class="qr-number">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ticket-instructions" id="ticket-instructions">
+                        <!-- InstruÃƒÂ§ÃƒÂµes serÃƒÂ£o inseridas aqui -->
+                    </div>
+                </div>
+                
+                <div class="ticket-footer">
+                    <p>Este ticket deve ser apresentado ao responsÃƒÂ¡vel</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="print-ticket" class="btn btn-primary"><i class="fas fa-print me-2"></i> Imprimir</button>
+            <a href="login.html" class="btn btn-secondary"><i class="fas fa-redo me-2"></i> Novo Ticket</a>
+        </div>
+    </div>
+
+    <script src="js/utils.js?v=2"></script>
+    <script>
+        // Generate ticket
+        document.addEventListener('DOMContentLoaded', function() {
+            const ticketData = storage.get('ticketData');
+            
+            if (!ticketData || !ticketData.aluno || !ticketData.qr) {
+                alert('Dados do ticket nÃƒÂ£o encontrados. Redirecionando...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('ticket-class').textContent = ticketData.aluno.turma;
+            document.getElementById('ticket-name').textContent = ticketData.aluno.nome;
+            document.getElementById('ticket-date').textContent = ticketData.data;
+            document.getElementById('ticket-time').textContent = ticketData.hora;
+            document.getElementById('ticket-reason').textContent = ticketData.motivo;
+            document.getElementById('qr-code-number').textContent = ticketData.qr.codigo;
+            
+            const instructionsDiv = document.getElementById('ticket-instructions');
+            instructionsDiv.innerHTML = `
+                <h4>InstruÃƒÂ§ÃƒÂµes:</h4>
+                <p>${ticketData.qr.instrucoes}</p>
+            `;
+            
+            gerarQRCode(ticketData.qr.codigo, document.getElementById('qrcode'));
+            
+            // Aqui seria enviado o email para usuÃƒÂ¡rios especÃƒÂ­ficos
+            console.log('Ticket gerado - Email seria enviado aqui');
+        });
+
+        // Print ticket
+        document.getElementById('print-ticket').addEventListener('click', function() {
+            window.print();
+        });
+    </script>
+</body>
+</html>
+
+
+
+

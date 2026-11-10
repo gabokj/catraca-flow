@@ -1,0 +1,14 @@
+# Arquivos gerados pelo Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+
+# Logs e arquivos de sistema
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

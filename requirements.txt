@@ -1,0 +1,4 @@
+# Dependências opcionais (o sistema roda com a biblioteca padrão nativa do Python)
+# Descomente caso opte por usar banco de dados MySQL em vez de SQLite:
+# pymysql>=1.1.0
+
